@@ -253,8 +253,14 @@ Create a Volume -> Create an encrypte file container -> Next -> Standard VeraCry
 Hashcalc
 ...
 ----------------------------------------------------------------------------------------------------------------
-Rainbow Crack
+Rainbow Crack / Rainbow Tables
+Winrtgen
+winrtgen.exe -> Add Table -> Rainbow table properties -> Hash(ntlm)/Min len(4)/Max len(6)/Chain Count(400000000)/Chartset(loweralpha) -> OK
+-> Start -> Start
+rcrack_gui.exe -> File -> Load NTLM hashes -> Rainbow Table -> Search Rainbow Tables ...
 
+Documentation:https://project-rainbowcrack.com/documentation.htm
 ----------------------------------------------------------------------------------------------------------------
-
-
+Interactive Shell
+python3 “import pty; pty.spawn('/bin/bash')”
+echo "import pty; pty.spawn('/bin/bash')"
